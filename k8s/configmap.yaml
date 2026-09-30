@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oauth-mcp-server-config
+  namespace: oauth-mcp
+data:
+  PORT: "3000"
+
+  # Log verbosity: error|warn|info|debug. "debug" logs per-request auth
+  # decisions and tool-call details as structured JSON lines (stdout/stderr) —
+  # useful while debugging, noisier in steady-state. Change and re-apply/roll
+  # out the deployment to take effect; no image rebuild needed.
+  LOG_LEVEL: "debug"
+
+  # URL this server is reachable at from whatever calls it. Used only to
+  # build the OAuth Protected Resource Metadata document (RFC 9728) returned
+  # at /.well-known/oauth-protected-resource. There is no Ingress in this
+  # manifest set (ClusterIP Service only) — update this once you decide how
+  # the service is exposed (port-forward, a Gateway/Ingress you add later,
+  # in-cluster DNS for cluster-internal callers, etc).
+  MCP_RESOURCE_URL: "http://oauth-mcp-server.oauth-mcp.svc.cluster.local"
+
+  # Asgardeo tenant issuer. JWKS is auto-discovered from
+  # ${OAUTH_ISSUER}/.well-known/openid-configuration, i.e.
+  # https://api.asgardeo.io/t/<your-tenant>/oauth2/token/.well-known/openid-configuration
+  OAUTH_ISSUER: "https://api.asgardeo.io/t/<your-tenant>/oauth2/token"
+
+  # Claim used to identify the caller for per-user data filtering.
+  OAUTH_USER_CLAIM: "email"
+
+  # Optional: uncomment and set to enforce an audience / required scopes.
+  # OAUTH_AUDIENCE: "<your-client-id-or-api-resource-identifier>"
+  # OAUTH_REQUIRED_SCOPES: "mcp.read"
+
+  # Optional, dev/test only: forces every validated token to be treated as
+  # this user for data filtering, regardless of its claims (e.g. useful with
+  # Asgardeo client-credentials tokens, which carry no per-user identity).
+  # Leave commented out for a real deployment.
+  # OAUTH_OVERRIDE_USER_KEY: "user@example.com"

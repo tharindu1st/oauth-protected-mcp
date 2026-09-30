@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth-mcp-server
+  namespace: oauth-mcp
+  labels:
+    app: oauth-mcp-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: oauth-mcp-server
+  template:
+    metadata:
+      labels:
+        app: oauth-mcp-server
+    spec:
+      containers:
+        - name: oauth-mcp-server
+          image: tharindudasun/oauth-protected-mcp-server:0.1.7
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: oauth-mcp-server-config
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      securityContext:
+        fsGroup: 1001
